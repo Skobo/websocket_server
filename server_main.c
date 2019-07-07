@@ -14,20 +14,19 @@
 #include <pthread.h>    // 使用多线程
 #include <hiredis/hiredis.h>  
 #include <unistd.h>
-#define		EPOLL_RESPOND_NUM		10000	// epoll最大同时管理句柄数量
+#define	    EPOLL_RESPOND_NUM		10000	// epoll最大同时管理句柄数量
 #define     REDIS_IP "127.0.0.1"    //redis ip
 #define     REDIS_PORT 6379         //redis port
 #define     WEBSOCKET_SERVER_PORT 8080
-#define KEY 5566
+#define     KEY 5566
 #include "cJSON.h"
 #include <regex.h> //正则头文件
 
 /*
- *  作者：刘祥 
+ *  作者：qq：769777107
  *  c语言 epoll网络模型的 websocket服务器
  *  利用redis 订阅和发布，做了横向集群
- *  注此代码还有一个小bug我没有放，如果要想做商用，或者集群服务，需赞助，我会修复这个bug，并亲自集群化，且
- *  支持定制功能
+ *  支持定制功能,有需要请联系作者
  *
 */
 typedef int (*CallBackFun)(int fd, char *buf, unsigned int bufLen);
