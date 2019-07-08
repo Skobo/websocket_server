@@ -80,7 +80,6 @@ int arrayRemoveItem(int array[][2], int arraySize, int value)
 *   buf 要匹配的字符串
 *   pattern 正则字符串
 *   成功返回大于0失败返回于小0
-*=======================
 */
 
 
@@ -472,7 +471,7 @@ int main(void)
         redisFree(subconn); 
         redisFree(pubconn); 
     
-   //{"room":1000,"id":77,"username":"liuxiang","content":"fdsagdsafdsafddddddddddddddddddddddddfdsa","to":0}
+   //{"room":1000,"id":77,"username":"usrname","content":"fdsagdsafdsafddddddddddddddddddddddddfdsa","to":0}
     return 0;
 }
 
