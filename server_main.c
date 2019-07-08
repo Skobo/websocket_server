@@ -15,15 +15,15 @@
 #include <hiredis/hiredis.h>  
 #include <unistd.h>
 #define		EPOLL_RESPOND_NUM		10000	// epoll最大同时管理句柄数量
-#define     REDIS_IP "127.0.0.1"    //redis ip
-#define     REDIS_PORT 6379         //redis port
-#define     WEBSOCKET_SERVER_PORT 8080
-#define KEY 5566
+// #define     REDIS_IP "127.0.0.1"    //redis ip
+// #define     REDIS_PORT 6379         //redis port
+//#define     WEBSOCKET_SERVER_PORT 8080
+#define     KEY 5566
 #include "cJSON.h"
 #include <regex.h> //正则头文件
-
+#include "config.h"   
 /*
-*  作者: 刘祥
+*  作者: lx
 */
 typedef int (*CallBackFun)(int fd, char *buf, unsigned int bufLen);
 redisContext* pubconn;
@@ -71,13 +71,6 @@ int arrayRemoveItem(int array[][2], int arraySize, int value)
     }
     return -1;
 }
-/* =====================
-*   regexp_pd正则匹配，
-*   buf 要匹配的字符串
-*   pattern 正则字符串
-*   成功返回大于0失败返回于小0
-*=======================
-*/
 
 
 // Server Function
@@ -352,12 +345,25 @@ int main(void)
 {
     pid_t pid[2];
     int f,mywait,mywaitstatus;
+    char redisIp[16]; 
+    char port[10];  
+    int redisPort; 
+    int websocketServerPort;
+    GetProfileString("./websocket.conf", "redis", "ip", redisIp);
+    GetProfileString("./websocket.conf", "redis", "port", port);
+    redisPort = atoi(port);
+    GetProfileString("./websocket.conf", "websocket_server", "port", port);
+    websocketServerPort = atoi(port);
+    // printf("redis_ip====%s====\n",redisIp);
+    // printf("redis_port====%d====\n",redisPort);
+    // printf("websocket_server_port====%d====\n",websocketServerPort);
+    // exit(-1);
 
     //===链接redis==== 这个redis文件描述符用来推送
-    pubconn = redisConnect(REDIS_IP, REDIS_PORT);  //链接redis
+    pubconn = redisConnect(redisIp, redisPort);  //链接redis
     if(pubconn->err)   printf("connection error:%s\n", pubconn->errstr);  
     //===链接redis==== 这个redis文件描述符用来接收
-    subconn = redisConnect(REDIS_IP, REDIS_PORT);  //链接redis
+    subconn = redisConnect(redisIp, redisPort);  //链接redis
     if(subconn->err)   printf("connection error:%s\n", subconn->errstr);  
 
     // //======循环创建2个子进程======
@@ -380,7 +386,7 @@ int main(void)
            //===== 初始化服务器参数 =====
         memset(&wss, 0, sizeof(wss));
         //strcpy(wss.ip, "127.0.0.1");     
-        wss.port = WEBSOCKET_SERVER_PORT;
+        wss.port = websocketServerPort;
         wss.callBack = &server_callBack; // 响应客户端时, 需要干嘛?
 
         
