@@ -34,6 +34,10 @@ struct room_node{
     struct user_node *user_node_tail;
     struct room_node *next;
 };
+
+void del_room_user(int dfd);//删除链表某个节点
+void send_room_user(int roomV,int idV,char* out);//给链表里面的成员进行推送
+
 int regexp_pd(char *buf,const char *pattern);
 int regexp(char *bematch,const char *pattern,char **val);//正则头文件
 

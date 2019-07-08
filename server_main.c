@@ -14,20 +14,16 @@
 #include <pthread.h>    // 使用多线程
 #include <hiredis/hiredis.h>  
 #include <unistd.h>
-#define	    EPOLL_RESPOND_NUM		10000	// epoll最大同时管理句柄数量
+#define		EPOLL_RESPOND_NUM		10000	// epoll最大同时管理句柄数量
 #define     REDIS_IP "127.0.0.1"    //redis ip
 #define     REDIS_PORT 6379         //redis port
 #define     WEBSOCKET_SERVER_PORT 8080
-#define     KEY 5566
+#define KEY 5566
 #include "cJSON.h"
 #include <regex.h> //正则头文件
 
 /*
- *  作者：qq：769777107
- *  c语言 epoll网络模型的 websocket服务器
- *  利用redis 订阅和发布，做了横向集群
- *  支持定制功能,有需要请联系作者
- *
+*  作者: 刘祥
 */
 typedef int (*CallBackFun)(int fd, char *buf, unsigned int bufLen);
 redisContext* pubconn;
@@ -80,6 +76,7 @@ int arrayRemoveItem(int array[][2], int arraySize, int value)
 *   buf 要匹配的字符串
 *   pattern 正则字符串
 *   成功返回大于0失败返回于小0
+*=======================
 */
 
 
@@ -181,6 +178,7 @@ void server_thread_fun(void *arge)
 				        exit(1);
 				    }
 				    arrayRemoveItem(wss->client_fd_array, EPOLL_RESPOND_NUM, events[j].data.fd);    // 从数组剔除fd
+                    //删除链表某个节点
 					close(events[j].data.fd);	//关闭通道
             }
         	//===================新通道接入事件===================
@@ -202,7 +200,7 @@ void server_thread_fun(void *arge)
 					//send(accept_fd , "OK\r\n" , 4 , MSG_NOSIGNAL);
 					printf("server fd/%d : accept\r\n", accept_fd);
 					arrayAddItem(wss->client_fd_array, EPOLL_RESPOND_NUM, accept_fd);    // 添加fd到数组
-                    printf("断点调试\n");
+                   // printf("断点调试\n");
 				}
 			}
 			//===================接收数据事件===================
@@ -217,7 +215,9 @@ void server_thread_fun(void *arge)
                         ;
                     else
                     { 
+
 					    printf("accept close : %d\r\n", events[j].data.fd);
+
                         //webSocket_send(events[j].data.fd , "{\"type\":\"error\",\"code\":404}", strlen("{\"type\":\"error\",\"code\":404}"), false, WDT_TXTDATA);
 					    // 向epoll删除client_sockfd监听事件  
 					    //ev.events = EPOLLIN|EPOLLET;
@@ -229,6 +229,9 @@ void server_thread_fun(void *arge)
 				            exit(1);
 				        }
 				        arrayRemoveItem(wss->client_fd_array, EPOLL_RESPOND_NUM, events[j].data.fd);    // 从数组剔除fd
+                        //从链表中删除这个房间的用户
+                         del_room_user(events[j].data.fd);
+                         printf_room_node_user(RoomHeadNode);//输出所有房间及用户
 					    close(events[j].data.fd);	//关闭通道
 					}
 				}
@@ -250,58 +253,36 @@ int server_callBack(int fd, char *buf, unsigned int bufLen)
     int ret;
     //printf("接收到请求要处理什么操作\n");
     ret = webSocket_recv(fd , buf , bufLen, NULL);    // 使用websocket recv 解析数数据包
-    //printf("1\n");
     if(ret > 0)
 	{
-        //printf("2\n");
 	    printf("server(fd/%d) recv: %s\r\n", fd, buf);
-        //printf("3\n");
-       
         const char *pattern = "^\\{\"room\":[0-9]+,\"id\":[0-9]+,\"username\":\".{3,20}\",\"content\":\".{1,100}\",\"to\":[0-9]+\\}$";
-        //printf("4\n");
-        //char *buf = "{\"rom\":1000,\"id\":77,\"username\":\"liuxiang\",\"content\":\"fdsagdsafdsafddddddddddddddddddddddddfdsa\",\"to\":0}";
+        //char *buf = "{\"rom\":1000,\"id\":77,\"username\":\"username\",\"content\":\"fdsagdsafdsafddddddddddddddddddddddddfdsa\",\"to\":0}";
         int d = regexp_pd(buf,pattern);
-        //printf("5\n");
-        //redisReply* replyd = NULL;
         if(d>0){//正则匹配数据格式 ，如果格式正确则执行 
-        //printf("6\n");
         //===操作redis===订阅
             redisReply* replyd = redisCommand(pubconn, "publish foo %s",buf);
-            //printf("7\n");
             if (replyd != NULL){
-                //printf("8\n");
                 if (replyd->type == REDIS_REPLY_ERROR){
-                    //printf("1\n");
                     printf("发布命令失败\n");
                 }
-                printf("9\n");
             }else{
-                //printf("10\n");
                 printf("与redis服务器链接失败\n");
                 
             }
              freeReplyObject(replyd);
-             //printf("11\n");
         }else{
             printf("内容格式不正确\n");
             return -1;
         }
-       
-        printf("12\n");
 		//===== 在这里根据客户端的请求内容, 提供相应的服务 =====
 		//if(strstr(buf, "hi~") != NULL)
-		 //   ret = webSocket_send(fd, "Hi~ I am server", strlen("Hi~ I am server"), false, WDT_TXTDATA);
-		
-		// ... ...
-		// ...
+		//   ret = webSocket_send(fd, "Hi~ I am server", strlen("Hi~ I am server"), false, WDT_TXTDATA);
 	}
-    else if(ret < 0)
+    else if(ret < 0)//小于0说明是建立链接的请求
     {
-        printf("13\n");
         if(strncmp(buf, "GET", 3) == 0){//握手,建立连接
-            printf("14\n");
             ret = webSocket_serverLinkToClient(fd, buf, ret);
-            printf("15\n");
         }	
     }
 	return ret;
@@ -340,30 +321,8 @@ void fun_redis_sub(){
                     if(!json_room){
                         break;
                     }
-                    struct room_node* srm = RoomHeadNode;
-                    while(srm != NULL){
-                        if(srm->room == json_room->valueint){
-                            struct user_node* un = srm->user_node_head;
-                            if(json_to->valueint == 0){
-                                while(un != NULL){
-                                    int ret;
-                                    ret = webSocket_send(un->fd, out, strlen(out), false, WDT_TXTDATA);
-                                    un = un->next;
-                                }
-                            }else if(json_to->valueint > 0){
-
-                                while(un != NULL){
-                                    if(un->id == json_to->valueint){
-                                        int ret;
-                                        ret = webSocket_send(un->fd, out, strlen(out), false, WDT_TXTDATA);
-                                    }
-                                    un = un->next;
-                                }
-                            }
-
-                        }
-                        srm = srm->next;
-                    }
+                     //--此处进行消息推送
+                    send_room_user(json_room->valueint,json_to->valueint,out);
                     cJSON_Delete(json);  //释放内存 
                     //free(out);
                     break;
@@ -391,18 +350,13 @@ void fun_redis_sub(){
 
 int main(void)
 {
-   
-    //=== 初始化房间节点===
-
-
-
     pid_t pid[2];
     int f,mywait,mywaitstatus;
 
-    //===链接redis====
+    //===链接redis==== 这个redis文件描述符用来推送
     pubconn = redisConnect(REDIS_IP, REDIS_PORT);  //链接redis
     if(pubconn->err)   printf("connection error:%s\n", pubconn->errstr);  
- //===链接redis====
+    //===链接redis==== 这个redis文件描述符用来接收
     subconn = redisConnect(REDIS_IP, REDIS_PORT);  //链接redis
     if(subconn->err)   printf("connection error:%s\n", subconn->errstr);  
 
@@ -466,12 +420,10 @@ int main(void)
         }
         
         //==============================
-       // pthread_cancel(sever_thread_id);     // 等待线程关闭
-        //printf("server close !\r\n");
         redisFree(subconn); 
         redisFree(pubconn); 
     
-   //{"room":1000,"id":77,"username":"usrname","content":"fdsagdsafdsafddddddddddddddddddddddddfdsa","to":0}
+   //{"room":1000,"id":77,"username":"username","content":"fdsagdsafdsafddddddddddddddddddddddddfdsa","to":0}
     return 0;
 }
 

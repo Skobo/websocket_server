@@ -171,6 +171,77 @@ void netCheck_getIP(char *devName, char *ip)
     // return ip;
 }
 
+void del_room_user(int dfd){
+    struct room_node* srm = RoomHeadNode;
+    int flag = 1;
+       while(srm != NULL && flag){
+                            struct user_node* un = srm->user_node_head;//当前节点
+                            struct user_node* sun = NULL;
+                                while(un != NULL){
+                                    if(un->fd == dfd){
+                                        //如果房间的用户链表里面只有一个用户，并且那个用户就是要删除的用户，就删除这个用户及房间
+                                        if(sun == NULL && un->next == NULL){
+                                            free(un);
+                                            un = NULL;
+                                            srm->user_node_head = NULL;
+                                            srm->user_node_tail = NULL;
+                                            flag = 0;
+                                            break;
+                                        }else if(sun == NULL && un->next != NULL){
+                                            free(un);
+                                            un = NULL;
+                                            srm->user_node_head = un->next;
+                                            flag = 0;
+                                            break;
+                                        }else if(sun != NULL && un->next == NULL){
+                                            free(un);
+                                            un = NULL;
+                                            sun->next = NULL;
+                                            srm->user_node_tail = sun;
+                                            flag = 0;
+                                            break;
+                                        }else if(sun != NULL && un->next != NULL){
+                                             sun->next = un->next;
+                                            free(un);
+                                            un = NULL;
+                                            flag = 0; 
+                                            break;
+                                        }
+                                    }
+                                    sun = un;
+                                    un = un->next;
+                                    
+                                }
+                        srm = srm->next;
+                    }
+}
+
+void send_room_user(int roomV,int idV,char* out){
+         struct room_node* srm = RoomHeadNode;
+                    while(srm != NULL){
+                        if(srm->room == roomV){
+                            struct user_node* un = srm->user_node_head;
+                            if(idV == 0){
+                                while(un != NULL){
+                                    int ret;
+                                    ret = webSocket_send(un->fd, out, strlen(out), false, WDT_TXTDATA);
+                                    un = un->next;
+                                }
+                            }else if(idV > 0){
+
+                                while(un != NULL){
+                                    if(un->id == idV){
+                                        int ret;
+                                        ret = webSocket_send(un->fd, out, strlen(out), false, WDT_TXTDATA);
+                                    }
+                                    un = un->next;
+                                }
+                            }
+
+                        }
+                        srm = srm->next;
+                    }
+}
 //==================== 域名转IP ====================
 
 typedef struct{
