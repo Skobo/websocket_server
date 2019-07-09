@@ -21,7 +21,8 @@
 #define     KEY 5566
 #include "cJSON.h"
 #include <regex.h> //正则头文件
-#include "config.h"   
+#include "config.h"  
+#include <sys/stat.h> 
 /*
 *  作者: lx
 */
@@ -343,6 +344,34 @@ void fun_redis_sub(){
 
 int main(void)
 {
+
+    int ret;
+   if(fork() >0){
+	exit(1);
+	}
+
+	setsid();//创建会话返回新会话ID
+	ret = chdir("/");//改变工作目录
+	
+
+	if(ret < 0){
+		perror("chdir");	
+	}
+	
+	umask(0002);//指定掩码
+	
+	close(STDIN_FILENO);//关闭屏幕的输入流 STDIN_FILENO 是0 STDOUT_FILENO是2 STDERR_FILENO 是3
+	open("/dev/null",O_RDWR);//打开黑洞文件 返回的文件描述符从最小的开始，就是o
+	dup2(0,STDOUT_FILENO);  //将标准输出重定向到黑洞文件
+	dup2(0,STDERR_FILENO);  //将标准错误 重定到的黑洞文件
+	
+
+	/*
+ 	*   这是执行守护进程的逻辑
+ 	*
+ 	*/
+ 	 
+
     pid_t pid[2];
     int f,mywait,mywaitstatus;
     char redisIp[16]; 
@@ -430,6 +459,8 @@ int main(void)
         redisFree(pubconn); 
     
    //{"room":1000,"id":77,"username":"username","content":"fdsagdsafdsafddddddddddddddddddddddddfdsa","to":0}
+   	while(1);
+	
     return 0;
 }
 
