@@ -1,7 +1,7 @@
 # websocket_server
 
 
-#使用帮助<br>
+## 使用帮助<br>
 
 1:安装redis<br>
 2:安装hiredis<br>
@@ -10,14 +10,14 @@
 5:执行make命令（注意：如果有错误，请自行百度，或者谷歌）<br>
 6:执行 ./websocket_server<br>
 
-#查看进程状态
+## 查看进程状态
 netstat -tunpl<br>
 默认是用8080端口，你可以在配置文件更改 
 
-#前端链接示例
+## 前端链接示例
 ws://ip:8080?room=房间号&id=用户id&username=用户名 <br>
 注意链接格式，如果格式不正确将连接不上。因为在程序里面用正则做了限制<br>
-#发送的文本格式是json字符串，格式如下
+## 发送的文本格式是json字符串，格式如下
 	{\"room\":1000,\"id\":77,\"username\":\"username\",\"content\":\"要发送的内容\",\"to\":0}<br>
 
 	to:0 表示给1000房间所有人发送<br>
