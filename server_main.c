@@ -341,37 +341,51 @@ void fun_redis_sub(){
         }
 
 }
-
-int main(void)
+// 守护进程初始化函数
+void init_daemon()
 {
+    pid_t pid;
+    int i = 0,op;
 
-    int ret;
-   if(fork() >0){
-	exit(1);
-	}
+    if ((pid = fork()) == -1) {
+        printf("Fork error !\n");
+        exit(1);
+    }
+    if (pid != 0) {
+        exit(0);        // 父进程退出
+    }
 
-	setsid();//创建会话返回新会话ID
-	ret = chdir("/");//改变工作目录
-	
+    setsid();           // 子进程开启新会话，并成为会话首进程和组长进程
+    if ((pid = fork()) == -1) {
+        printf("Fork error !\n");
+        exit(-1);
+    }
+    if (pid != 0) {
+        exit(0);        // 结束第一子进程，第二子进程不再是会话首进程
+    }
+    chdir("/");      // 改变工作目录
+    umask(0);           // 重设文件掩码
+    for (; i < getdtablesize(); ++i) {
+       close(i);        // 关闭打开的文件描述符
+    }
+    //close(STDIN_FILENO);//关闭屏幕的输入流 STDIN_FILENO 是0 STDOUT_FILENO是2 STDERR_FILENO 是3
+	// open("./log.txt",O_RDWR);//打开黑洞文件 返回的文件描述符从最小的开始，就是o
+    // op =  open("./log.txt",O_RDWR);
+	// dup2(op,STDOUT_FILENO);  //将标准输出重定向到黑洞文件
+	// dup2(op,STDERR_FILENO);  //将标准错误 重定到的黑洞文件
 
-	if(ret < 0){
-		perror("chdir");	
-	}
-	
-	umask(0002);//指定掩码
-	
-	close(STDIN_FILENO);//关闭屏幕的输入流 STDIN_FILENO 是0 STDOUT_FILENO是2 STDERR_FILENO 是3
+    close(STDIN_FILENO);//关闭屏幕的输入流 STDIN_FILENO 是0 STDOUT_FILENO是2 STDERR_FILENO 是3
 	open("/dev/null",O_RDWR);//打开黑洞文件 返回的文件描述符从最小的开始，就是o
 	dup2(0,STDOUT_FILENO);  //将标准输出重定向到黑洞文件
 	dup2(0,STDERR_FILENO);  //将标准错误 重定到的黑洞文件
-	
+    return;
+}
+int main()
+{
 
-	/*
- 	*   这是执行守护进程的逻辑
- 	*
- 	*/
- 	 
-
+   
+    printf("websocket_server start ok\n");
+    
     pid_t pid[2];
     int f,mywait,mywaitstatus;
     char redisIp[16]; 
@@ -387,6 +401,13 @@ int main(void)
     // printf("redis_port====%d====\n",redisPort);
     // printf("websocket_server_port====%d====\n",websocketServerPort);
     // exit(-1);
+
+
+    /*
+ 	*   守护进程
+ 	*
+ 	*/
+    init_daemon();
 
     //===链接redis==== 这个redis文件描述符用来推送
     pubconn = redisConnect(redisIp, redisPort);  //链接redis
@@ -459,7 +480,7 @@ int main(void)
         redisFree(pubconn); 
     
    //{"room":1000,"id":77,"username":"username","content":"fdsagdsafdsafddddddddddddddddddddddddfdsa","to":0}
-   	while(1);
+ 
 	
     return 0;
 }
