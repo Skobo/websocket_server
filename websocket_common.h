@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 //#define WEBSOCKET_DEBUG
-
+#define  SOUHU_DEBUG
 // websocket根据data[0]判别数据包类型    比如0x81 = 0x80 | 0x1 为一个txt类型数据包
 typedef enum{
     WDT_MINDATA = -20,      // 0x0：标识一个中间数据包

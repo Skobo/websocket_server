@@ -407,7 +407,10 @@ int main()
  	*   守护进程
  	*
  	*/
-    init_daemon();
+     #ifdef SOUHU_DEBUG
+       init_daemon();
+    #endif
+    
 
     //===链接redis==== 这个redis文件描述符用来推送
     pubconn = redisConnect(redisIp, redisPort);  //链接redis
