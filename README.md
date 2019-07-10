@@ -27,7 +27,28 @@ ws://ip:8080?room=房间号&id=用户id&username=用户名 <br>
 注意
 --------
 如果想要详细的集群部署方案，可以参考，nginx websocket 代理，将此代码部署到多台linux上。<br>
-后续我会添加 <br>
-nginx websocket集群代理配置。<br>
+
+## nginx websocket集群配置
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+}
+
+upstream websocket {
+    server websocket_server 1的ip:8080;
+    server websocket_server12的ip:8080;
+}
+
+server {
+    listen 8080;
+    location /ws {
+        proxy_pass http://websocket;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+
+}
+
 增加配置文件启动<br>
 如果你比较急，想使用集群方案，扩展弹幕系统性能，或者聊天性能，可以联系我qq：769777107
