@@ -18,7 +18,7 @@ netstat -tunpl<br>
 ws://ip:8080?room=房间号&id=用户id&username=用户名 <br>
 注意链接格式，如果格式不正确将连接不上。因为在程序里面用正则做了限制<br>
 ## 发送的文本格式是json字符串，格式如下
-	{\"room\":1000,\"id\":77,\"username\":\"username\",\"content\":\"要发送的内容\",\"to\":0}<br>
+	{"room":1000,"id":77,"username":"username","content":"要发送的内容","to":0}
 
 	to:0 表示给1000房间所有人发送<br>
 	to:id 表示给房间指定用户发送
