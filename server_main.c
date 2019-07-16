@@ -299,7 +299,7 @@ void fun_redis_sub(){
                     break;
                 case REDIS_REPLY_ARRAY : //2 表示返回的是数组
                     
-                    printf("%s\n", reply->element[2]->str); 
+                    printf("reids收到===%s\n", reply->element[2]->str); 
                     cJSON *json,*json_to,*json_room;
                     char* out = reply->element[2]->str;
  
@@ -467,7 +467,7 @@ int main()
                 if(wss.client_fd_array[i][1] != 0 && wss.client_fd_array[i][0] > 0)
                 {
                     client_fd = wss.client_fd_array[i][0];
-                    if(webSocket_send(client_fd, "{\"room\":\"1000\",\"username\":\"humingming\"}", strlen("{\"room\":\"1000\",\"username\":\"humingming\"}"), false, WDT_TXTDATA) < 0)
+                    if(webSocket_send(client_fd, "{\"type\":\"ping\"}", strlen("{\"type\":\"ping\"}"), false, WDT_TXTDATA) < 0)
                     {
                         printf("server webSocket_send err !!\r\n");
                         exitFlag = 1;
@@ -484,7 +484,9 @@ int main()
     
    //{"room":1000,"id":77,"username":"username","content":"fdsagdsafdsafddddddddddddddddddddddddfdsa","to":0}
  
-	
+	//ws://47.93.5.97:8081?room=1000&id=15&username=hm
+    //ws://47.93.5.97:8081?room=1000&id=5&username=lx
+    //ws://47.93.5.97:8081?room=1000&id=25&username=ssh
     return 0;
 }
 
