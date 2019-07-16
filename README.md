@@ -1,4 +1,4 @@
-# websocket_server
+# c语言 websocket_server + redis 实现websocket集群解决方案
    注意这个是linux下websocket，只声明一遍。
    个人集群websocket测试地址  
    ws://47.93.5.97:8081?room=1000&id=15&username=hm  
@@ -9,9 +9,10 @@
 
 ### 1:安装redis<br>
    这个百度有很多答案，不在此细说了
-   安装好了后，修改redis.conf bind 127.0.0.1 为 bind 0.0.0.0 再将 protected-mode yes，改为protected-mode no
-  
-   启动./bin/redis-server ./redis.conf   
+   安装好了后，修改redis.conf  
+   bind 127.0.0.1 改为 bind 0.0.0.0  
+   protected-mode yes 改为 protected-mode no
+   启动redis ./bin/redis-server ./redis.conf   
 ### 2:安装hiredis<br>
    参考：https://www.cnblogs.com/houjun/p/4877052.html  
 ### 3:将代码拷贝到linux某一目录下
